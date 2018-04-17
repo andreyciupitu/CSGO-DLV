@@ -638,6 +638,11 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 114954737630079068, guid: db0729c5dc5b81a4c8529dd003eab458,
+        type: 2}
+      propertyPath: onToggleRemote.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4459191782467646, guid: db0729c5dc5b81a4c8529dd003eab458, type: 2}
       propertyPath: m_LocalPosition.x
       value: 0.22697449
@@ -669,6 +674,16 @@ Prefab:
     - target: {fileID: 4459191782467646, guid: db0729c5dc5b81a4c8529dd003eab458, type: 2}
       propertyPath: m_RootOrder
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954737630079068, guid: db0729c5dc5b81a4c8529dd003eab458,
+        type: 2}
+      propertyPath: onToggleRemote.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954737630079068, guid: db0729c5dc5b81a4c8529dd003eab458,
+        type: 2}
+      propertyPath: onToggleRemote.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: db0729c5dc5b81a4c8529dd003eab458, type: 2}

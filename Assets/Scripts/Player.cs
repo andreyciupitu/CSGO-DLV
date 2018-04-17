@@ -5,64 +5,84 @@ using UnityEngine.Events;
 [System.Serializable]
 public class ToggleEvent : UnityEvent<bool>{}
 
-public class Player : NetworkBehaviour 
+namespace CSGO_DLV.Player
 {
-    [SerializeField] ToggleEvent onToggleShared;
-    [SerializeField] ToggleEvent onToggleLocal;
-    [SerializeField] ToggleEvent onToggleRemote;
-    [SerializeField] float respawnTime = 5f;
 
-    GameObject mainCamera;
-
-    void Start()
+    public class Player : NetworkBehaviour
     {
-        mainCamera = Camera.main.gameObject;
+        [SerializeField]
+        ToggleEvent onToggleShared;
+        [SerializeField]
+        ToggleEvent onToggleLocal;
+        [SerializeField]
+        ToggleEvent onToggleRemote;
+        [SerializeField]
+        float respawnTime = 5f;
 
-        EnablePlayer ();
-    }
+        GameObject mainCamera;
 
-    void DisablePlayer()
-    {
-        if (isLocalPlayer)
-            mainCamera.SetActive (true);
-
-        onToggleShared.Invoke (false);
-
-        if (isLocalPlayer)
-            onToggleLocal.Invoke (false);
-        else
-            onToggleRemote.Invoke (false);
-    }
-
-    void EnablePlayer()
-    {
-       if (isLocalPlayer)
-            mainCamera.SetActive (false);
-
-        onToggleShared.Invoke (true);
-
-        if (isLocalPlayer)
-            onToggleLocal.Invoke (true);
-        else
-            onToggleRemote.Invoke (true);
-    }
-
-    public void Die()
-    {
-        DisablePlayer ();
-
-        Invoke ("Respawn", respawnTime);
-    }
-
-    void Respawn()
-    {
-        if (isLocalPlayer) 
+        void Start()
         {
-            Transform spawn = NetworkManager.singleton.GetStartPosition ();
-            transform.position = spawn.position;
-            transform.rotation = spawn.rotation;
+            mainCamera = Camera.main.gameObject;
+
+            EnablePlayer();
         }
 
-        EnablePlayer ();
+        void DisablePlayer()
+        {
+            if (isLocalPlayer)
+                mainCamera.SetActive(true);
+
+            onToggleShared.Invoke(false);
+
+            if (isLocalPlayer)
+                onToggleLocal.Invoke(false);
+            else
+                onToggleRemote.Invoke(false);
+        }
+
+        void EnablePlayer()
+        {
+            if (isLocalPlayer)
+                mainCamera.SetActive(false);
+
+            onToggleShared.Invoke(true);
+
+            if (isLocalPlayer)
+                onToggleLocal.Invoke(true);
+            else
+                onToggleRemote.Invoke(true);
+        }
+
+        public void Die()
+        {
+            DisablePlayer();
+
+            Invoke("Respawn", respawnTime);
+        }
+
+        void Respawn()
+        {
+            if (isLocalPlayer)
+            {
+                Transform spawn = NetworkManager.singleton.GetStartPosition();
+                transform.position = spawn.position;
+                transform.rotation = spawn.rotation;
+            }
+
+            EnablePlayer();
+        }
+        
+        public void Update()
+        {
+            if (!NetworkManager.singleton.IsClientConnected())
+                mainCamera.SetActive(true);
+        }
+
+        private void OnDisconnectedFromServer(NetworkDisconnection info)
+        {
+            mainCamera.SetActive(true);
+        }
     }
+
 }

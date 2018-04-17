@@ -1,45 +1,50 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 
-public class PlayerHealth : NetworkBehaviour
+namespace CSGO_DLV.Player
 {
-    [SerializeField] int maxHealth = 3;
 
-    Player player;
-    //TestCharacter player;
-    int health;
-
-    void Awake()
+    public class PlayerHealth : NetworkBehaviour
     {
-        player = GetComponent<Player>();
-    }
+        [SerializeField] int maxHealth = 3;
 
-    [ServerCallback]
-    void OnEnable()
-    {
-        health = maxHealth;
-    }
+        Player player;
+        //TestCharacter player;
+        int health;
 
-    [Server]
-    public bool TakeDamage()
-    {
-        bool died = false;
+        void Awake()
+        {
+            player = GetComponent<Player>();
+        }
 
-        if (health <= 0)
+        [ServerCallback]
+        void OnEnable()
+        {
+            health = maxHealth;
+        }
+
+        [Server]
+        public bool TakeDamage()
+        {
+            bool died = false;
+
+            if (health <= 0)
+                return died;
+
+            health--;
+            died = health <= 0;
+
+            RpcTakeDamage(died);
+
             return died;
+        }
 
-        health--;
-        died = health <= 0;
-
-        RpcTakeDamage(died);
-
-        return died;
+        [ClientRpc]
+        void RpcTakeDamage(bool died)
+        {
+            if (died)
+                player.Die();
+        }
     }
 
-    [ClientRpc]
-    void RpcTakeDamage(bool died)
-    {
-        if (died)
-            player.Die();
-    }
 }

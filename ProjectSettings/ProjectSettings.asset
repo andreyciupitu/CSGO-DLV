@@ -53,7 +53,7 @@ PlayerSettings:
   androidShowActivityIndicatorOnLoading: -1
   tizenShowActivityIndicatorOnLoading: -1
   iosAppInBackgroundBehavior: 0
-  displayResolutionDialog: 2
+  displayResolutionDialog: 1
   iosAllowHTTPDownload: 1
   allowedAutorotateToPortrait: 1
   allowedAutorotateToPortraitUpsideDown: 1
@@ -641,7 +641,7 @@ PlayerSettings:
   apiCompatibilityLevel: 2
   cloudProjectId: 32a80323-5ae6-43ac-8727-3ba3c9cd02b9
   projectName: CSGO-DLV
-  organizationId: andreyciupitu
+  organizationId: crippling-depression
   cloudEnabled: 0
   enableNativePlatformBackendsForNewInputSystem: 0
   disableOldInputManagerSupport: 0
