@@ -41,6 +41,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_NextStep;
         private bool m_Jumping;
         private AudioSource m_AudioSource;
+        private Animator anim;
 
         // Use this for initialization
         private void Start()
@@ -55,6 +56,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_Jumping = false;
             m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
+            anim = GetComponentInChildren<Animator>();
         }
 
 
@@ -108,6 +110,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir.x = desiredMove.x*speed;
             m_MoveDir.z = desiredMove.z*speed;
 
+            anim.SetFloat("speed", m_Input.magnitude * speed);
 
             if (m_CharacterController.isGrounded)
             {
@@ -182,6 +185,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3 newCameraPosition;
             if (!m_UseHeadBob)
             {
+                m_Camera.transform.localPosition = m_OriginalCameraPosition;
                 return;
             }
             if (m_CharacterController.velocity.magnitude > 0 && m_CharacterController.isGrounded)

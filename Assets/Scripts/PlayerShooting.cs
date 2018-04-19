@@ -38,8 +38,9 @@ namespace CSGO_DLV.Player
         [Command]
         void CmdFireShot(Vector3 origin, Vector3 direction)
         {
-            RaycastHit hit;
+            GetComponentInChildren<Animator>().SetTrigger("shoot");
 
+            RaycastHit hit;
             Ray ray = new Ray(origin, direction);
             Debug.DrawRay(ray.origin, ray.direction * 3f, Color.red, 1f);
 
