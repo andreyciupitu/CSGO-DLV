@@ -17,7 +17,7 @@ namespace CSGO_DLV.Player
         [SerializeField]
         ToggleEvent onToggleRemote;
         [SerializeField]
-        float respawnTime = 5f;
+        float respawnTime = 3f;
 
         GameObject mainCamera;
 
@@ -31,8 +31,11 @@ namespace CSGO_DLV.Player
         void DisablePlayer()
         {
             if (isLocalPlayer)
+            {
                 mainCamera.SetActive(true);
-
+                // added
+                PlayerCanvas.canvas.HideReticule();
+            }
             onToggleShared.Invoke(false);
 
             if (isLocalPlayer)
@@ -44,9 +47,13 @@ namespace CSGO_DLV.Player
         void EnablePlayer()
         {
             if (isLocalPlayer)
+            {
                 mainCamera.SetActive(false);
+                // added
+                PlayerCanvas.canvas.Initialize();
+            }
 
-            onToggleShared.Invoke(true);
+                onToggleShared.Invoke(true);
 
             if (isLocalPlayer)
                 onToggleLocal.Invoke(true);

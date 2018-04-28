@@ -8,9 +8,11 @@ namespace CSGO_DLV.Player
     {
         [SerializeField] int maxHealth = 3;
 
+        //added
+        [SyncVar(hook = "OnHealthChanged")] int health;
         Player player;
         //TestCharacter player;
-        int health;
+       // int health;
 
         void Awake()
         {
@@ -42,9 +44,20 @@ namespace CSGO_DLV.Player
         [ClientRpc]
         void RpcTakeDamage(bool died)
         {
+            if (isLocalPlayer)
+                PlayerCanvas.canvas.FlashDamageEffect();
             if (died)
                 player.Die();
         }
+
+        //added
+        void OnHealthChanged(int value)
+        {
+            health = value;
+            if (isLocalPlayer)
+                PlayerCanvas.canvas.SetHealth(value);
+        }
+        
     }
 
 }

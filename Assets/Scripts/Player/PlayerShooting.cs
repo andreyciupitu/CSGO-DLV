@@ -21,6 +21,13 @@ namespace CSGO_DLV.Player
                 canShoot = true;
         }
 
+        /*[ServerCallback]
+        private void OnEnable()
+        {
+            score = 0;
+        }
+        */
+
         void Update()
         {
             if (!canShoot)
