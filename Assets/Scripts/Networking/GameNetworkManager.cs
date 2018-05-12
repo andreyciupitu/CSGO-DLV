@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
@@ -7,19 +6,29 @@ using UnityEngine.Networking.Match;
 
 namespace CSGO_DLV.Networking
 {
-    [RequireComponent(typeof(LobbyHook))]
+    public class KickMsg : MessageBase { }
+
+    [System.Serializable]
+    public class ServerStatus
+    {
+        public string Status { get; set; }
+        public bool IsServerOnly { get; set; }
+        public bool IsMatchMaking { get; set; }
+        public bool IsHost { get; set; }
+    }
+
+    //[RequireComponent(typeof(LobbyHook))]
     public class GameNetworkManager : NetworkLobbyManager
     {
         private static GameNetworkManager instance = null;
-        private bool inMatchMaking;
+        private const short MsgKicked = MsgType.Highest + 1;
 
-        /// <summary>
-        /// LobbyHook must be on the same GameObject as the GameNetworkManager
-        /// </summary>
+        private ServerStatus serverStatus;
         private LobbyHook lobbyHook;
-
-        // Server info
-        public string ServerStatus { get; set; }
+        private int playerCount = 0;
+        private string originalLobby;
+        [SerializeField]
+        private float prematchCountdown;
 
         /// <summary>
         /// Singleton instance of the GameNetworkManager
@@ -31,43 +40,63 @@ namespace CSGO_DLV.Networking
                 return instance;
             }
         }
+        public int PlayerCount
+        {
+            get
+            {
+                return playerCount;
+            }
+        }
 
         private void Awake()
         {
-            // Singleton Pattern
+            // Sort of Singleton Pattern - keep the new instance
+            // This is so the events & references set in the editor
+            // don't get lost when the other instance is destroyed
             if (instance == null)
                 instance = this;
             else if (instance != this)
             {
-                Destroy(gameObject); // Keep only one instance
-                return;
+                Destroy(instance.gameObject); // Keep only one instance
+                instance = this;
             }
 
             DontDestroyOnLoad(gameObject);
             lobbyHook = GetComponent<LobbyHook>();
-            inMatchMaking = false;
+            serverStatus = new ServerStatus();
+            originalLobby = offlineScene;
+            //lobbyScene = "";
+            offlineScene = "";
         }
         
-        /// <summary>
-        /// Get the next spawn position, taking into account teams and oher criteria.
-        /// </summary>
-        /// <returns> The next spawn transform. </returns>
-        public new Transform GetStartPosition()
-        {
-            // TODO: Add implementation based on Lobby Players here.
 
-            return base.GetStartPosition();
-        }
-
-        ////////////////////////// Game Handling //////////////////////////// 
-
+        #region GameHandling API
         /// <summary>
         /// Hosts a new LAN game 
         /// </summary>
         public void HostLanGame()
         {
             StartHost();
-            ServerStatus = "LAN Host";
+            serverStatus.Status = "LAN Host";
+            serverStatus.IsServerOnly = false;
+            serverStatus.IsHost = true;
+            serverStatus.IsMatchMaking = false;
+
+            lobbyHook.OnInfoUpdate(serverStatus.Status);
+        }
+
+        /// <summary>
+        /// Start a new LAN server
+        /// </summary>
+        public void DedicatedLANServer()
+        {
+            StartServer();
+            serverStatus.Status = "LAN Server";
+            serverStatus.IsServerOnly = true;
+            serverStatus.IsHost = true;
+            serverStatus.IsMatchMaking = false;
+
+            lobbyHook.OnInfoUpdate(serverStatus.Status);
         }
 
         /// <summary>
@@ -78,23 +107,12 @@ namespace CSGO_DLV.Networking
         {
             networkAddress = gameAddress;
             StartClient();
-            ServerStatus = "Connecting";
-        }
+            serverStatus.Status = "Connecting";
+            serverStatus.IsMatchMaking = true;
+            serverStatus.IsServerOnly = false;
+            serverStatus.IsHost = false;
 
-        /// <summary>
-        /// Leaves a LAN lobby, and closes the server if the player was a host
-        /// </summary>
-        public void LeaveLanGame()
-        {
-            if (NetworkServer.active)
-            {
-                StopHost();
-            }
-            else
-            {
-                StopClient();
-            }
-            ServerStatus = "Offline";
+            lobbyHook.OnInfoUpdate(serverStatus.Status);
         }
 
         /// <summary>
@@ -106,7 +124,12 @@ namespace CSGO_DLV.Networking
         {
             StartMatchMaker();
             matchMaker.CreateMatch(matchName, (uint)maxPlayers, true, password, "", "", 0, 0, OnMatchCreate);
-            ServerStatus = "MM server " + this.matchName;
+            serverStatus.Status = "MM server " + this.matchName;
+            serverStatus.IsMatchMaking = true;
+            serverStatus.IsServerOnly = false;
+            serverStatus.IsHost = true;
+
+            lobbyHook.OnInfoUpdate(serverStatus.Status);
         }
 
         /// <summary>
@@ -117,7 +140,9 @@ namespace CSGO_DLV.Networking
         public void JoinMatch(NetworkID networkID, string password = "")
         {
             matchMaker.JoinMatch(networkID, password, "", "", 0, 0, OnMatchJoined);
-            inMatchMaking = true;
+            serverStatus.IsMatchMaking = true;
+            serverStatus.IsServerOnly = false;
+            serverStatus.IsHost = false;
         }
 
         /*
@@ -125,121 +150,169 @@ namespace CSGO_DLV.Networking
         {
             matchMaker.ListMatches(page, 6, "", true, 0, 0, OnGUIMatchList);
         }*/
-
-        public void LeaveMatch()
+        
+        /// <summary>
+        /// Leaves a lobby, and closes the server if the player was a host
+        /// </summary>
+        public void LeaveGame()
         {
-            if (NetworkServer.active)
+            if (serverStatus.IsHost)
             {
-                matchMaker.DestroyMatch(matchInfo.networkId, 0, OnDestroyMatch);
-                StopHost();
+                if (serverStatus.IsMatchMaking)
+                    matchMaker.DestroyMatch(matchInfo.networkId, 0, OnDestroyMatch);
+
+                if (serverStatus.IsServerOnly)
+                    StopServer();
+                else
+                    StopHost();
             }
             else
-            {
                 StopClient();
-            }
-            ServerStatus = "Offline";
+            serverStatus.Status = "Offline";
+            serverStatus.IsMatchMaking = false;
+            serverStatus.IsServerOnly = false;
+            serverStatus.IsHost = false;
+            
+            lobbyHook.OnInfoUpdate(serverStatus.Status);
         }
 
-        ////////////////////////// Callbacks //////////////////////////// 
+        /// <summary>
+        /// Kicks the player on the given connection
+        /// </summary>
+        /// <param name="conn">Connection with the player</param>
+        public void KickPlayer(GameLobbyPlayer player)
+        {
+            player.connectionToClient.Send(MsgKicked, new KickMsg());
+        }
+        #endregion
 
+        #region Helper Methods
+        /// <summary>
+        /// Begins a countdown before starting the match.
+        /// </summary>
+        private IEnumerator StartMatch()
+        {
+            float remainingTime = prematchCountdown;
+            int floorTime = Mathf.FloorToInt(remainingTime);
+
+            while (remainingTime > 0)
+            {
+                yield return null;
+
+                remainingTime -= Time.deltaTime;
+                int newFloorTime = Mathf.FloorToInt(remainingTime);
+
+                // Update the info panel on each client
+                if (newFloorTime != floorTime)
+                {
+                    floorTime = newFloorTime;
+
+                    serverStatus.Status = "Starting Game in " + newFloorTime + " seconds!";
+                    UpdateDisplayedInfo();
+                }
+            }
+
+            serverStatus.Status = "Loading map...";
+            UpdateDisplayedInfo();
+            
+            // Start game when timer reaches 0
+            GameNetworkManager.Manager.ServerChangeScene(playScene);
+        }
+        
+        /// <summary>
+        /// Handler for Kick messages
+        /// </summary>
+        private void KickedMessageHandler(NetworkMessage netMsg)
+        {
+            netMsg.conn.Disconnect();
+            lobbyHook.OnPlayerKicked();
+        }
+
+        /// <summary>
+        /// Updates the server status on all clients
+        /// </summary>
+        private void UpdateDisplayedInfo()
+        {
+            foreach (NetworkLobbyPlayer p in lobbySlots)
+            {
+                if (p != null)
+                {
+                    (p as GameLobbyPlayer).RpcUpdateInfo(serverStatus.Status);
+                }
+            }
+        }
+        #endregion
+
+        #region Callbacks
+
+        //TODO Add On stop Client override
+        // Find out how to notify added players
         public override void OnLobbyStartHost()
         {
-            lobbyHook.OnLobbyStartHost.Invoke();
-        }
-
-        public override void OnLobbyClientConnect(NetworkConnection conn)
-        {
-            ServerStatus = "LAN Client";
-            lobbyHook.OnLobbyClientConnect.Invoke(conn);
-        }
-
-        public override void OnLobbyClientDisconnect(NetworkConnection conn)
-        {
-            ServerStatus = "Offline";
-            lobbyHook.OnLobbyClientDisconnect.Invoke(conn);
-        }
-
-        public override void OnLobbyClientSceneChanged(NetworkConnection conn)
-        {
-            lobbyHook.OnLobbyClientSceneChanged.Invoke(conn);
-        }
-
-        public override bool OnLobbyServerSceneLoadedForPlayer(GameObject lobbyPlayer, GameObject gamePlayer)
-        {
-            Debug.Log("Game started!");
-            return lobbyHook.OnLobbyServerSceneLoadedForPlayer(lobbyPlayer, gamePlayer);
-        }
-
-        public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
-        {
-            Debug.Log("Adding a new player!");
-            Instantiate(playerPrefab, GetStartPosition());
-        }
-
-        public override void OnLobbyServerPlayersReady()
-        {
-            base.OnLobbyServerPlayersReady();
+            lobbyHook.OnStartHost();
         }
 
         public override void OnLobbyStopHost()
         {
-            base.OnLobbyStopHost();
+            lobbyHook.OnStopHost();
         }
 
         public override void OnLobbyStartServer()
         {
-            base.OnLobbyStartServer();
+            lobbyHook.OnStartServer();
         }
 
-        public override void OnLobbyServerConnect(NetworkConnection conn)
+        public override void OnStopServer()
         {
-            base.OnLobbyServerConnect(conn);
+            lobbyHook.OnStopServer();
         }
 
         public override void OnLobbyServerDisconnect(NetworkConnection conn)
         {
-            base.OnLobbyServerDisconnect(conn);
+            // Make each client refresh its lobby
+            foreach (NetworkLobbyPlayer p in lobbySlots)
+            {
+                if (p != null)
+                {
+                    (p as GameLobbyPlayer).RpcRefresh();
+                }
+            }
+            lobbyHook.OnPlayerRemoved();
         }
 
-        public override void OnLobbyServerSceneChanged(string sceneName)
+        public override bool OnLobbyServerSceneLoadedForPlayer(GameObject lobbyPlayer, GameObject gamePlayer)
         {
-            base.OnLobbyServerSceneChanged(sceneName);
+            return base.OnLobbyServerSceneLoadedForPlayer(lobbyPlayer, gamePlayer);
         }
 
-        public override GameObject OnLobbyServerCreateLobbyPlayer(NetworkConnection conn, short playerControllerId)
+        public override void OnLobbyServerPlayersReady()
         {
-            return base.OnLobbyServerCreateLobbyPlayer(conn, playerControllerId);
+            StartCoroutine(StartMatch());
         }
 
-        public override void OnLobbyServerPlayerRemoved(NetworkConnection conn, short playerControllerId)
+        public override void OnLobbyClientConnect(NetworkConnection conn)
         {
-            base.OnLobbyServerPlayerRemoved(conn, playerControllerId);
+            // Add Kick Handler
+            conn.RegisterHandler(MsgKicked, KickedMessageHandler);
+
+            // Update server info when connection is established
+            if (!serverStatus.IsHost)
+            {
+                serverStatus.Status = "LAN Client";
+                lobbyHook.OnClientConnect(conn);
+                lobbyHook.OnInfoUpdate(serverStatus.Status);
+            }
         }
 
-        public override void OnLobbyClientEnter()
+        public override void OnLobbyClientDisconnect(NetworkConnection conn)
         {
-            base.OnLobbyClientEnter();
-        }
-
-        public override void OnLobbyClientExit()
-        {
-            base.OnLobbyClientExit();
-        }
-
-        public override void OnLobbyStartClient(NetworkClient lobbyClient)
-        {
-            base.OnLobbyStartClient(lobbyClient);
-        }
-
-        public override void OnLobbyStopClient()
-        {
-            base.OnLobbyStopClient();
+            lobbyHook.OnClientDisconnect(conn);
         }
 
         public override void OnLobbyClientAddPlayerFailed()
         {
-            base.OnLobbyClientAddPlayerFailed();
+            lobbyHook.OnClientAddError();
         }
+        #endregion
     }
-
 }
