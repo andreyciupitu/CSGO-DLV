@@ -9,9 +9,10 @@ public class PlayerCanvas : MonoBehaviour
     [SerializeField]
     Image reticule;
     [SerializeField] UIFader damageImage;
-  //  [SerializeField] Text gameStatusText;
+    [SerializeField] Text gameStatusText;
     [SerializeField] Text healthValue;
-    /*[SerializeField] Text killsValue;
+    [SerializeField] Text killsValue;
+    /*
     [SerializeField] Text logText;
     [SerializeField] AudioSource deathAudio;
     */
@@ -30,9 +31,10 @@ public class PlayerCanvas : MonoBehaviour
     {
         reticule = GameObject.Find("Reticule").GetComponent<Image>();
         damageImage = GameObject.Find("DamagedFlash").GetComponent<UIFader>();
-       // gameStatusText = GameObject.Find("GameStatusText").GetComponent<Text>();
+        gameStatusText = GameObject.Find("GameStatusText").GetComponent<Text>();
         healthValue = GameObject.Find("HealthValue").GetComponent<Text>();
-        /*killsValue = GameObject.Find("KillsValue").GetComponent<Text>();
+        killsValue = GameObject.Find("KillsValue").GetComponent<Text>();
+        /*
         logText = GameObject.Find("LogText").GetComponent<Text>();
         deathAudio = GameObject.Find("DeathAudio").GetComponent<AudioSource>();
         */
@@ -41,7 +43,7 @@ public class PlayerCanvas : MonoBehaviour
     public void Initialize()
     {
         reticule.enabled = true;
-       // gameStatusText.text = "";
+        gameStatusText.text = "";
     }
 
     public void HideReticule()
@@ -59,22 +61,24 @@ public class PlayerCanvas : MonoBehaviour
         if (!deathAudio.isPlaying)
             deathAudio.Play();
     }
-
+    */
     public void SetKills(int amount)
     {
         killsValue.text = amount.ToString();
     }
-    */
+    
     public void SetHealth(int amount)
     {
         healthValue.text = amount.ToString();
     }
-    /*
+    
     public void WriteGameStatusText(string text)
     {
         gameStatusText.text = text;
-    }
 
+            HideReticule();
+    }
+    /*
     public void WriteLogText(string text, float duration)
     {
         CancelInvoke();

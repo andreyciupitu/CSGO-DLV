@@ -63,6 +63,11 @@ namespace CSGO_DLV.Player
 
         public void Die()
         {
+            if (isLocalPlayer)
+            {
+                PlayerCanvas.canvas.WriteGameStatusText("You Died!");
+            }
+
             DisablePlayer();
 
             Invoke("Respawn", respawnTime);

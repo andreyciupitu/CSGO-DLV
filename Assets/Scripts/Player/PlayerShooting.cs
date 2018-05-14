@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using DigitalRuby.PyroParticles;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace CSGO_DLV.Player
@@ -8,7 +9,10 @@ namespace CSGO_DLV.Player
     {
         [SerializeField] float shotCooldown = .3f;
         [SerializeField] Transform firePosition;
+        [SerializeField] GameObject shotVfx;
         // [SerializeField] ShotEffectsManager shotEffects;
+
+        [SyncVar(hook = "OnScoreChanged")] int score = 0;
 
         float ellapsedTime;
         bool canShoot;
@@ -25,8 +29,8 @@ namespace CSGO_DLV.Player
         private void OnEnable()
         {
             score = 0;
-        }
-        */
+        }*/
+        
 
         void Update()
         {
@@ -45,8 +49,13 @@ namespace CSGO_DLV.Player
         [Command]
         void CmdFireShot(Vector3 origin, Vector3 direction)
         {
-            GetComponentInChildren<Animator>().SetTrigger("shoot");
 
+            // FireExplosion f;
+            // Instantiate(explosion);
+            
+
+
+            GetComponentInChildren<Animator>().SetTrigger("shoot");
             RaycastHit hit;
             Ray ray = new Ray(origin, direction);
             Debug.DrawRay(ray.origin, ray.direction * 3f, Color.red, 1f);
@@ -58,18 +67,36 @@ namespace CSGO_DLV.Player
                 PlayerHealth enemy = hit.transform.GetComponent<PlayerHealth>();
 
                 if (enemy != null)
-                    enemy.TakeDamage();
+                {
+                    bool wasKillShot = enemy.TakeDamage();
+                    if (wasKillShot)
+                        score++;
+                }
 
             }
             RpcProcessShotEffects(result, hit.point);
+        }
 
+        void OnScoreChanged(int value)
+        {
+            score = value;
+            if (isLocalPlayer)
+            {
+                PlayerCanvas.canvas.SetKills(value);
+                // Maybe delete this
+                if (score == 5)
+                {
+                    PlayerCanvas.canvas.WriteGameStatusText("You Won!");
+                }
+            }
         }
 
         [ClientRpc]
         void RpcProcessShotEffects(bool playImpact, Vector3 point)
         {
-            //    shotEffects.PlayShotEffects();
 
+            Instantiate(shotVfx, firePosition);
+            //    shotEffects.PlayShotEffects();
             //    if (playImpact)
             //       shotEffects.PlayImpactEffect(point);
         }
