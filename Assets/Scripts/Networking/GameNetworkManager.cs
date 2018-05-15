@@ -65,7 +65,6 @@ namespace CSGO_DLV.Networking
             lobbyHook = GetComponent<LobbyHook>();
             serverStatus = new ServerStatus();
             originalLobby = offlineScene;
-            //lobbyScene = "";
             offlineScene = "";
         }
         
@@ -167,7 +166,12 @@ namespace CSGO_DLV.Networking
                     StopHost();
             }
             else
+            {
+                if (client != null && client.connection != null)
+                    OnLobbyClientDisconnect(this.client.connection);
                 StopClient();
+            }
+
             serverStatus.Status = "Offline";
             serverStatus.IsMatchMaking = false;
             serverStatus.IsServerOnly = false;
@@ -266,20 +270,7 @@ namespace CSGO_DLV.Networking
         {
             lobbyHook.OnStopServer();
         }
-
-        public override void OnLobbyServerDisconnect(NetworkConnection conn)
-        {
-            // Make each client refresh its lobby
-            foreach (NetworkLobbyPlayer p in lobbySlots)
-            {
-                if (p != null)
-                {
-                    (p as GameLobbyPlayer).RpcRefresh();
-                }
-            }
-            lobbyHook.OnPlayerRemoved();
-        }
-
+        
         public override bool OnLobbyServerSceneLoadedForPlayer(GameObject lobbyPlayer, GameObject gamePlayer)
         {
             return base.OnLobbyServerSceneLoadedForPlayer(lobbyPlayer, gamePlayer);

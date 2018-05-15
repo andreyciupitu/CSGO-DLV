@@ -517,6 +517,8 @@ MonoBehaviour:
   ready: {fileID: 114418742212691094}
   dropdown: {fileID: 114505808087268892}
   kickButton: {fileID: 114974381246539848}
+  readyMsg: Ready
+  notReadyMsg: Not Ready
 --- !u!114 &114130124657574984
 MonoBehaviour:
   m_ObjectHideFlags: 1

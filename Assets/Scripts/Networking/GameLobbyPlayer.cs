@@ -71,6 +71,12 @@ namespace CSGO_DLV.Networking
             lobbyHook.OnPlayerAdded();
         }
 
+        private void OnDestroy()
+        {
+            GameNetworkManager.Manager.lobbySlots[slot] = null; // Hardcoded to make sure the refresh works
+            lobbyHook.OnPlayerRemoved();
+        }
+
         public override void OnStartLocalPlayer()
         {
             base.OnStartLocalPlayer();
@@ -139,12 +145,6 @@ namespace CSGO_DLV.Networking
         public void RpcUpdateInfo(string info)
         {
             lobbyHook.OnInfoUpdate(info);
-        }
-
-        [ClientRpc]
-        public void RpcRefresh()
-        {
-            lobbyHook.OnPlayerRemoved();
         }
         #endregion
     }

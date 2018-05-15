@@ -18,8 +18,12 @@ namespace CSGO_DLV.Menu
         [SerializeField]
         private Button kickButton;
 
-        private GameLobbyPlayer player;
+        [SerializeField]
+        private string readyMsg = "";
+        [SerializeField]
         private string notReadyMsg = "";
+
+        private GameLobbyPlayer player;
 
         private void Awake()
         {
@@ -56,7 +60,7 @@ namespace CSGO_DLV.Menu
         /// </summary>
         public void LocalPlayerSetup()
         {
-            notReadyMsg = player.isLocalPlayer? "Ready!" : "Not Ready!";
+            notReadyMsg = player.isLocalPlayer? readyMsg : notReadyMsg;
             input.interactable = player.isLocalPlayer;
             dropdown.interactable = player.isLocalPlayer;
             kickButton.gameObject.SetActive(!player.isLocalPlayer && NetworkServer.active);
@@ -73,7 +77,7 @@ namespace CSGO_DLV.Menu
 
             ready.interactable = !player.readyToBegin && player.isLocalPlayer;            
             if (player.readyToBegin)
-                ready.GetComponentInChildren<Text>().text = "Ready!";
+                ready.GetComponentInChildren<Text>().text = readyMsg;
             else
                 ready.GetComponentInChildren<Text>().text = notReadyMsg;
         }
