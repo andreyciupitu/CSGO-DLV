@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Events;
+using CSGO_DLV.Game;
 
 [System.Serializable]
 public class ToggleEvent : UnityEvent<bool>{}
 
-namespace CSGO_DLV.Player
+namespace CSGO_DLV.NetworkPlayer
 {
 
     public class Player : NetworkBehaviour
@@ -19,11 +20,14 @@ namespace CSGO_DLV.Player
         [SerializeField]
         float respawnTime = 3f;
 
+        private GameController gameController;
         GameObject mainCamera;
 
         void Start()
         {
             mainCamera = Camera.main.gameObject;
+            gameController = GameController.Controller;
+            gameController.RegisterPlayer(this);
 
             EnablePlayer();
         }
@@ -49,11 +53,10 @@ namespace CSGO_DLV.Player
             if (isLocalPlayer)
             {
                 mainCamera.SetActive(false);
-                // added
+
                 PlayerCanvas.canvas.Initialize();
             }
-
-                onToggleShared.Invoke(true);
+            onToggleShared.Invoke(true);
 
             if (isLocalPlayer)
                 onToggleLocal.Invoke(true);
@@ -89,6 +92,11 @@ namespace CSGO_DLV.Player
         {
             if (!NetworkManager.singleton.IsClientConnected())
                 mainCamera.SetActive(true);
+        }
+
+        private void OnDestroy()
+        {
+            gameController.UnregisterPlayer(this);
         }
 
         private void OnDisconnectedFromServer(NetworkDisconnection info)

@@ -1,18 +1,15 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 
-namespace CSGO_DLV.Player
+namespace CSGO_DLV.NetworkPlayer
 {
-
     public class PlayerHealth : NetworkBehaviour
     {
         [SerializeField] int maxHealth = 3;
-
-        //added
-        [SyncVar(hook = "OnHealthChanged")] int health;
+        
+        [SyncVar(hook = "OnHealthChanged")]
+        int health;
         Player player;
-        //TestCharacter player;
-       // int health;
 
         void Awake()
         {
@@ -41,6 +38,10 @@ namespace CSGO_DLV.Player
             return died;
         }
 
+        /// <summary>
+        /// Plays death and hit effects on Client
+        /// </summary>
+        /// <param name="died"></param>
         [ClientRpc]
         void RpcTakeDamage(bool died)
         {

@@ -1,45 +1,48 @@
 ﻿using DigitalRuby.PyroParticles;
 using UnityEngine;
 using UnityEngine.Networking;
+using CSGO_DLV.Game;
 
-namespace CSGO_DLV.Player
+namespace CSGO_DLV.NetworkPlayer
 {
-
     public class PlayerShooting : NetworkBehaviour
     {
-        [SerializeField] float shotCooldown = .3f;
-        [SerializeField] Transform firePosition;
-        [SerializeField] GameObject shotVfx;
-        // [SerializeField] ShotEffectsManager shotEffects;
+        [SerializeField]
+        float shotCooldown = .3f;
+        [SerializeField]
+        Transform firePosition;
+        [SerializeField]
+        GameObject shotVfx;
 
-        [SyncVar(hook = "OnScoreChanged")] int score = 0;
+        [SyncVar(hook = "OnScoreChanged")]
+        int score = 0;
 
+        private GameController gameController;
         float ellapsedTime;
         bool canShoot;
 
         void Start()
         {
-            //   shotEffects.Initialize();
-
             if (isLocalPlayer)
                 canShoot = true;
+            gameController = GameController.Controller;
         }
-
-        /*[ServerCallback]
-        private void OnEnable()
-        {
-            score = 0;
-        }*/
-        
 
         void Update()
         {
+            // In Game Menu
+            if (isLocalPlayer && Input.GetKeyDown(KeyCode.Escape))
+            {
+                PlayerCanvas.canvas.ShowMenu(canShoot);
+                canShoot = !canShoot;
+            }
+
             if (!canShoot)
                 return;
 
             ellapsedTime += Time.deltaTime;
 
-            if (Input.GetButtonDown("Fire1") && ellapsedTime > shotCooldown)
+            if (Input.GetButton("Fire1") && ellapsedTime > shotCooldown)
             {
                 ellapsedTime = 0f;
                 CmdFireShot(firePosition.position, firePosition.forward);
@@ -49,13 +52,9 @@ namespace CSGO_DLV.Player
         [Command]
         void CmdFireShot(Vector3 origin, Vector3 direction)
         {
-
-            // FireExplosion f;
-            // Instantiate(explosion);
-            
-
-
             GetComponentInChildren<Animator>().SetTrigger("shoot");
+
+            // Ray cast for target
             RaycastHit hit;
             Ray ray = new Ray(origin, direction);
             Debug.DrawRay(ray.origin, ray.direction * 3f, Color.red, 1f);
@@ -70,7 +69,7 @@ namespace CSGO_DLV.Player
                 {
                     bool wasKillShot = enemy.TakeDamage();
                     if (wasKillShot)
-                        score++;
+                        score = gameController.UpdateScore(score);
                 }
 
             }
@@ -84,7 +83,7 @@ namespace CSGO_DLV.Player
             {
                 PlayerCanvas.canvas.SetKills(value);
                 // Maybe delete this
-                if (score == 5)
+                if (gameController.GameWon(score))
                 {
                     PlayerCanvas.canvas.WriteGameStatusText("You Won!");
                 }
@@ -94,11 +93,7 @@ namespace CSGO_DLV.Player
         [ClientRpc]
         void RpcProcessShotEffects(bool playImpact, Vector3 point)
         {
-
             Instantiate(shotVfx, firePosition);
-            //    shotEffects.PlayShotEffects();
-            //    if (playImpact)
-            //       shotEffects.PlayImpactEffect(point);
         }
 
     }

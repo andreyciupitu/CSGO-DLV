@@ -249,8 +249,6 @@ namespace CSGO_DLV.Networking
 
         #region Callbacks
 
-        //TODO Add On stop Client override
-        // Find out how to notify added players
         public override void OnLobbyStartHost()
         {
             lobbyHook.OnStartHost();
