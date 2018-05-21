@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
 using UnityEngine.Networking.Match;
+using System.Collections.Generic;
 
 namespace CSGO_DLV.Networking
 {
@@ -144,11 +145,11 @@ namespace CSGO_DLV.Networking
             serverStatus.IsHost = false;
         }
 
-        /*
-        public void GetMatchPage(int page)
+        
+        public void GetMatchPage(int page, int pageSize)
         {
-            matchMaker.ListMatches(page, 6, "", true, 0, 0, OnGUIMatchList);
-        }*/
+            matchMaker.ListMatches(page, 6, "", true, 0, 0, OnMatchList);
+        }
         
         /// <summary>
         /// Leaves a lobby, and closes the server if the player was a host
@@ -301,6 +302,24 @@ namespace CSGO_DLV.Networking
         public override void OnLobbyClientAddPlayerFailed()
         {
             lobbyHook.OnClientAddError();
+        }
+
+        public override void OnMatchCreate(bool success, string extendedInfo, MatchInfo matchInfo)
+        {
+            base.OnMatchCreate(success, extendedInfo, matchInfo);
+            lobbyHook.OnMatchCreate();
+        }
+
+        public override void OnMatchJoined(bool success, string extendedInfo, MatchInfo matchInfo)
+        {
+            base.OnMatchJoined(success, extendedInfo, matchInfo);
+            lobbyHook.OnMatchJoined();
+        }
+
+        public override void OnMatchList(bool success, string extendedInfo, List<MatchInfoSnapshot> matchList)
+        {
+            base.OnMatchList(success, extendedInfo, matchList);
+            lobbyHook.MatchListRefresh(matchList);
         }
         #endregion
     }

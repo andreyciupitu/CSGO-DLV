@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
+using UnityEngine.Networking.Match;
 
 namespace CSGO_DLV.Networking
 {
@@ -9,6 +11,8 @@ namespace CSGO_DLV.Networking
     public class ConnectionEvent : UnityEvent<NetworkConnection> { }
     [Serializable]
     public class TextUpdateEvent : UnityEvent<string> { }
+    [Serializable]
+    public class MatchListEvent : UnityEvent<List<MatchInfoSnapshot>> { }
 
     public class LobbyHook : MonoBehaviour
     {
@@ -21,6 +25,14 @@ namespace CSGO_DLV.Networking
         [SerializeField]
         private UnityEvent onStopHost = new UnityEvent();
 
+        [Header("Matchmaking events")]
+        [SerializeField]
+        private UnityEvent onMatchCreate = new UnityEvent();
+        [SerializeField]
+        private UnityEvent onMatchJoined = new UnityEvent();
+        [SerializeField]
+        private MatchListEvent onMatchList = new MatchListEvent();
+ 
         [Header("Player events")]
         [SerializeField]
         private UnityEvent onPlayerKicked = new UnityEvent();
@@ -193,6 +205,36 @@ namespace CSGO_DLV.Networking
         public void RegisterPlayerRemovedHandler(UnityAction handler)
         {
             onRemovePlayer.AddListener(handler);
+        }
+
+        public void OnMatchCreate()
+        {
+            onMatchCreate.Invoke();
+        }
+
+        public void RegisterMatchCreatedHandler(UnityAction handler)
+        {
+            onMatchCreate.AddListener(handler);
+        }
+
+        public void OnMatchJoined()
+        {
+            onMatchJoined.Invoke();
+        }
+
+        public void RegisterMatchJoinedHandler(UnityAction handler)
+        {
+            onMatchJoined.AddListener(handler);
+        }
+
+        public void MatchListRefresh(List<MatchInfoSnapshot> l)
+        {
+            onMatchList.Invoke(l);
+        }
+
+        public void RegisterMatchListHandler(UnityAction<List<MatchInfoSnapshot>> handler)
+        {
+            onMatchList.AddListener(handler);
         }
         #endregion
     }
