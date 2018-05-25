@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace CSGO_DLV.NetworkPlayer
+namespace CSGO_DLV.HUD
 {
     [RequireComponent(typeof(CanvasGroup))]
     public class UIFader : MonoBehaviour

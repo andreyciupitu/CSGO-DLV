@@ -7,6 +7,7 @@ using UnityEngine.Networking.Match;
 
 namespace CSGO_DLV.Networking
 {
+    // Custom events
     [Serializable]
     public class ConnectionEvent : UnityEvent<NetworkConnection> { }
     [Serializable]

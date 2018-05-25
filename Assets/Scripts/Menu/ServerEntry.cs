@@ -26,6 +26,10 @@ namespace CSGO_DLV.Menu
             lobbyHook = LobbyHook.Hook;
         }
 
+        /// <summary>
+        /// Displays the info stored in the MatchInfoSnapshot
+        /// </summary>
+        /// <param name="info"></param>
         public void ExtractInfo(MatchInfoSnapshot info)
         {
             serverName.text = info.name;

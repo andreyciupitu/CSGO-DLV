@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
 using UnityEngine.Networking.Match;
+using CSGO_DLV.NetworkPlayer;
 using System.Collections.Generic;
 
 namespace CSGO_DLV.Networking
@@ -18,7 +19,7 @@ namespace CSGO_DLV.Networking
         public bool IsHost { get; set; }
     }
 
-    //[RequireComponent(typeof(LobbyHook))]
+    [RequireComponent(typeof(LobbyHook))]
     public class GameNetworkManager : NetworkLobbyManager
     {
         private static GameNetworkManager instance = null;
@@ -108,7 +109,7 @@ namespace CSGO_DLV.Networking
             networkAddress = gameAddress;
             StartClient();
             serverStatus.Status = "Connecting";
-            serverStatus.IsMatchMaking = true;
+            serverStatus.IsMatchMaking = false;
             serverStatus.IsServerOnly = false;
             serverStatus.IsHost = false;
 
@@ -124,7 +125,7 @@ namespace CSGO_DLV.Networking
         {
             StartMatchMaker();
             matchMaker.CreateMatch(matchName, (uint)maxPlayers, true, password, "", "", 0, 0, OnMatchCreate);
-            serverStatus.Status = "MM server " + this.matchName;
+            serverStatus.Status = "MM server " + matchName;
             serverStatus.IsMatchMaking = true;
             serverStatus.IsServerOnly = false;
             serverStatus.IsHost = true;
@@ -145,7 +146,11 @@ namespace CSGO_DLV.Networking
             serverStatus.IsHost = false;
         }
 
-        
+        /// <summary>
+        /// Asks the MM service for available servers
+        /// </summary>
+        /// <param name="page">Server page to return</param>
+        /// <param name="pageSize">Size of a page</param>
         public void GetMatchPage(int page, int pageSize)
         {
             matchMaker.ListMatches(page, 6, "", true, 0, 0, OnMatchList);
@@ -246,6 +251,14 @@ namespace CSGO_DLV.Networking
                 }
             }
         }
+
+        /// <summary>
+        /// Sets the offline scene back to the lobby scene
+        /// </summary>
+        public void ResetLobbyScene()
+        {
+            offlineScene = originalLobby;
+        }
         #endregion
 
         #region Callbacks
@@ -272,7 +285,12 @@ namespace CSGO_DLV.Networking
         
         public override bool OnLobbyServerSceneLoadedForPlayer(GameObject lobbyPlayer, GameObject gamePlayer)
         {
-            return base.OnLobbyServerSceneLoadedForPlayer(lobbyPlayer, gamePlayer);
+            GameLobbyPlayer lPlayer = lobbyPlayer.GetComponent<GameLobbyPlayer>();
+            Player player = gamePlayer.GetComponent<Player>();
+            
+            player.playerName = lPlayer.Name;
+            player.color = lPlayer.Skins[lPlayer.SkinNumber].skin;
+            return true;
         }
 
         public override void OnLobbyServerPlayersReady()
@@ -288,7 +306,10 @@ namespace CSGO_DLV.Networking
             // Update server info when connection is established
             if (!serverStatus.IsHost)
             {
-                serverStatus.Status = "LAN Client";
+                if (serverStatus.IsMatchMaking)
+                    serverStatus.Status = "MM Client";
+                else
+                    serverStatus.Status = "LAN Client";
                 lobbyHook.OnClientConnect(conn);
                 lobbyHook.OnInfoUpdate(serverStatus.Status);
             }

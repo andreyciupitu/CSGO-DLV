@@ -21,7 +21,7 @@ namespace CSGO_DLV.Networking
         private Skin[] skins; // editor display
         
         [SyncVar(hook = "OnNameChanged")]
-        private string playerName = "";
+        private string playerName = "cacat";
         [SyncVar(hook = "OnSkinChanged")]
         private int skin = 0;
 
@@ -87,6 +87,7 @@ namespace CSGO_DLV.Networking
             // Local player listens to the ready button
             lobbyHook.RegisterPlayerReadyHandler(SendReadyToBeginMessage);
 
+            // Update the asociated entry for the local player
             entry.LocalPlayerSetup();
             entry.UpdateInfo();
         }

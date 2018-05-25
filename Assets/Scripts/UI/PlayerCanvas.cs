@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityStandardAssets.Characters.FirstPerson;
 
-namespace CSGO_DLV.NetworkPlayer
+namespace CSGO_DLV.HUD
     { 
     public class PlayerCanvas : MonoBehaviour
     {
@@ -20,10 +21,8 @@ namespace CSGO_DLV.NetworkPlayer
         Text killsValue;
         [SerializeField]
         private GameObject menu;
-        /*
-        [SerializeField] Text logText;
-        [SerializeField] AudioSource deathAudio;
-        */
+        [SerializeField]
+        Text timeText;
 
         private void Awake()
         {
@@ -32,20 +31,6 @@ namespace CSGO_DLV.NetworkPlayer
                 canvas = this;
             else if (canvas != this)
                 Destroy(gameObject);
-        }
-
-        private void Reset()
-        {
-            //Find all of our resources
-            reticule = GameObject.Find("Reticule").GetComponent<Image>();
-            damageImage = GameObject.Find("DamagedFlash").GetComponent<UIFader>();
-            gameStatusText = GameObject.Find("GameStatusText").GetComponent<Text>();
-            healthValue = GameObject.Find("HealthValue").GetComponent<Text>();
-            killsValue = GameObject.Find("KillsValue").GetComponent<Text>();
-            /*
-            logText = GameObject.Find("LogText").GetComponent<Text>();
-            deathAudio = GameObject.Find("DeathAudio").GetComponent<AudioSource>();
-            */
         }
 
         public void ShowMenu(bool active)
@@ -89,18 +74,10 @@ namespace CSGO_DLV.NetworkPlayer
 
             HideReticule();
         }
-        /*
-        public void WriteLogText(string text, float duration)
-        {
-            CancelInvoke();
-            logText.text = text;
-            Invoke("ClearLogText", duration);
-        }
 
-        void ClearLogText()
+        public void SetTime(int timeLeft)
         {
-            logText.text = "";
+            timeText.text = timeLeft.ToString();
         }
-        */
     }
 }

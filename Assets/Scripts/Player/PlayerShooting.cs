@@ -1,7 +1,8 @@
-﻿using DigitalRuby.PyroParticles;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Networking;
 using CSGO_DLV.Game;
+using CSGO_DLV.HUD;
+using UnityStandardAssets.Characters.FirstPerson;
 
 namespace CSGO_DLV.NetworkPlayer
 {

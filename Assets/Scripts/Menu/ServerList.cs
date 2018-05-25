@@ -30,6 +30,9 @@ namespace CSGO_DLV.Menu
             GameNetworkManager.Manager.GetMatchPage(currentPage, pageSize);
         }
 
+        /// <summary>
+        /// Displays the new list of available servers
+        /// </summary>
         public void Refresh(List<MatchInfoSnapshot> matches)
         {
             // Remove the old entries
@@ -57,6 +60,7 @@ namespace CSGO_DLV.Menu
             }
         }
 
+        #region Matchmaker functions
         public void GetCurrentPage()
         {
             GameNetworkManager.Manager.GetMatchPage(currentPage, pageSize);
@@ -66,5 +70,6 @@ namespace CSGO_DLV.Menu
         {
             GameNetworkManager.Manager.GetMatchPage(++currentPage, pageSize);
         }
+        #endregion
     }
 }

@@ -39,7 +39,7 @@ namespace CSGO_DLV.Menu
         public void SetToPlayer(GameLobbyPlayer p)
         {
             player = p;
-            
+
             input.onEndEdit.AddListener(player.ChangeName);
             
             dropdown.ClearOptions();

@@ -1,20 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using CSGO_DLV.NetworkPlayer;
+using CSGO_DLV.Networking;
 using System.Linq;
 
 namespace CSGO_DLV.Game
 {
-    public class GameController : MonoBehaviour
+    public class GameController : NetworkBehaviour
     {
         private static GameController instance = null;
-        [SerializeField]
-        private int maxScore;
-        [SerializeField]
-        private int pointsPerKill;
-        [SerializeField]
-        private float matchDuration;
+        
+        private GameSettings settings;
         private List<Player> players;
 
         public static GameController Controller
@@ -35,21 +33,23 @@ namespace CSGO_DLV.Game
             {
                 Destroy(gameObject); // Keep only one instance
             }
+            settings = GameSettings.Settings;
         }
 
         private void Start()
         {
-            //StartCoroutine(GameCountdown());
+            if (NetworkServer.active)
+                StartCoroutine(GameCountdown());
         }
         
         public int UpdateScore(int score)
         {
-            return score += pointsPerKill;
+            return score += settings.PointsPerKill;
         }
 
         public bool GameWon(int score)
         {
-            return score >= maxScore;
+            return score >= settings.MaxScore;
         }
 
         public void RegisterPlayer(Player player)
@@ -66,10 +66,11 @@ namespace CSGO_DLV.Game
         {
             return players;
         }
-/*
+
+        [Server]
         public IEnumerator GameCountdown()
         {
-            float remainingTime = matchDuration;
+            float remainingTime = settings.MatchDuration;
             int floorTime = Mathf.FloorToInt(remainingTime);
 
             while (remainingTime > 0)
@@ -100,6 +101,6 @@ namespace CSGO_DLV.Game
                     player.RpcGameCountdown(floorTime);
                 }
             }
-        }*/
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
+using CSGO_DLV.HUD;
 
 namespace CSGO_DLV.NetworkPlayer
 {

@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using CSGO_DLV.Game;
+using CSGO_DLV.HUD;
 
 [System.Serializable]
 public class ToggleEvent : UnityEvent<bool>{}
@@ -11,6 +13,14 @@ namespace CSGO_DLV.NetworkPlayer
 
     public class Player : NetworkBehaviour
     {
+        [SyncVar(hook = "OnColorChanged")]
+        public Color color;
+        
+        [SyncVar(hook = "OnNameChanged")]
+        public string playerName;
+
+        [SerializeField]
+        private Text nameText;
         [SerializeField]
         ToggleEvent onToggleShared;
         [SerializeField]
@@ -29,6 +39,8 @@ namespace CSGO_DLV.NetworkPlayer
             gameController = GameController.Controller;
             gameController.RegisterPlayer(this);
 
+            OnNameChanged(playerName);
+            OnColorChanged(color);
             EnablePlayer();
         }
 
@@ -37,7 +49,6 @@ namespace CSGO_DLV.NetworkPlayer
             if (isLocalPlayer)
             {
                 mainCamera.SetActive(true);
-                // added
                 PlayerCanvas.canvas.HideReticule();
             }
             onToggleShared.Invoke(false);
@@ -53,7 +64,6 @@ namespace CSGO_DLV.NetworkPlayer
             if (isLocalPlayer)
             {
                 mainCamera.SetActive(false);
-
                 PlayerCanvas.canvas.Initialize();
             }
             onToggleShared.Invoke(true);
@@ -72,7 +82,6 @@ namespace CSGO_DLV.NetworkPlayer
             }
 
             DisablePlayer();
-
             Invoke("Respawn", respawnTime);
         }
 
@@ -84,14 +93,7 @@ namespace CSGO_DLV.NetworkPlayer
                 transform.position = spawn.position;
                 transform.rotation = spawn.rotation;
             }
-
             EnablePlayer();
-        }
-        
-        public void Update()
-        {
-            if (!NetworkManager.singleton.IsClientConnected())
-                mainCamera.SetActive(true);
         }
 
         private void OnDestroy()
@@ -99,9 +101,27 @@ namespace CSGO_DLV.NetworkPlayer
             gameController.UnregisterPlayer(this);
         }
 
-        private void OnDisconnectedFromServer(NetworkDisconnection info)
+        public void RpcGameCountdown(int time)
         {
-            mainCamera.SetActive(true);
+            PlayerCanvas.canvas.SetTime(time);
+        }
+
+        private void OnNameChanged(string name)
+        {
+            playerName = name;
+            gameObject.name = name;
+            GetComponentInChildren<Text>(true).text = name;
+        }
+
+        private void OnColorChanged(Color color)
+        {
+            this.color = color;
+            Renderer[] renderers = GetComponentsInChildren<Renderer>();
+            for (int i = 0; i < renderers.Length; i++) 
+            {
+                renderers[i].material.color = color;
+            }
+
         }
     }
 
